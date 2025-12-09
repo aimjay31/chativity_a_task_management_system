@@ -3,10 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chativity</title>
+    <title>Chativity - Dashboard</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #333; }
+        .nav a.active { font-weight: bold; color: #007bff; }
+        
+        /* ALERT STYLES */
+        .alert-box { margin-bottom: 20px; }
+        .alert { padding: 10px; margin-bottom: 5px; border-radius: 4px; border: 1px solid transparent; }
+        .alert-error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        .alert-urgent { background-color: #fff3cd; color: #856404; border-color: #ffeeba; font-weight: bold; }
+        .alert-warning { background-color: #d1ecf1; color: #0c5460; border-color: #bee5eb; }
+
+        .task-form { background: #f4f4f4; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .task-form input, .task-form select { margin: 5px 0; padding: 8px; width: 100%; box-sizing: border-box; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+        
+        .priority-High { color: red; font-weight: bold; }
+        .priority-Medium { color: orange; }
+        .priority-Low { color: green; }
+        .status-Completed { text-decoration: line-through; color: gray; }
+    </style>
 </head>
 <body>
-    <p>Welcome to Chativity! This is the dashboard</p>
-    <p>this is the link to <a href="/talk" class="{% if request.path == '/talk' %}active{% endif %}">Talk</a></p>
+    <h1>Chativity Dashboard</h1>
+    
+    <div class="nav">
+        <a href="/" class="active">Task Dashboard</a>
+        <a href="/talk">Team Chat</a>
+    </div>
+
+    {% if alerts %}
+    <div class="alert-box">
+        <h3>🔔 Notifications</h3>
+        {% for alert in alerts %}
+            <div class="alert alert-{{ alert.type }}">
+                {{ alert.msg }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="task-form">
+        <h3>Create New Task</h3>
+        <form method="POST" action="/">
+            <label>Task Title:</label>
+            <input type="text" name="task_title" placeholder="e.g., Finalize Proposal" required>
+            
+            <label>Assign To:</label>
+            <input type="text" name="assigned_to" placeholder="e.g., John Doe">
+            
+            <label>Priority:</label>
+            <select name="priority">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+            </select>
+            
+            <label>Deadline:</label>
+            <input type="date" name="deadline" required>
+            
+            <button type="submit" style="margin-top: 10px; padding: 10px 20px; cursor: pointer;">Add Task</button>
+        </form>
+    </div>
+
+    <h3>Team Tasks</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Assigned To</th>
+                <th>Priority</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr class="status-{{ task.status }}">
+                <td>{{ task.title }}</td>
+                <td>{{ task.assigned_to }}</td>
+                <td class="priority-{{ task.priority }}">{{ task.priority }}</td>
+                <td>{{ task.deadline }}</td>
+                <td>{{ task.status }}</td>
+                <td>
+                    {% if task.status != 'Completed' %}
+                    <a href="/complete/{{ task.id }}">Mark Done</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center;">No tasks yet. Create one above!</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>
