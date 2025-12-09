@@ -1,43 +1,72 @@
 from flask import Flask, render_template, request, redirect, url_for
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-# In-memory storage for prototype purposes
-# In a real production app, you would use a database like SQLite or PostgreSQL
+# In-memory storage
 tasks = []
 messages = []
 
 @app.route("/", methods=["GET", "POST"])
 def dashboard():
     if request.method == "POST":
-        # Feature: Create, assign, and track tasks [cite: 16]
         task_title = request.form.get("task_title")
         assigned_to = request.form.get("assigned_to")
-        priority = request.form.get("priority") # Feature: Priority tasks (low, medium, high) [cite: 41]
-        deadline = request.form.get("deadline") # Feature: Deadlines [cite: 17]
+        priority = request.form.get("priority")
+        deadline = request.form.get("deadline")
         
-        # Simple validation
         if task_title:
             new_task = {
                 "id": len(tasks) + 1,
                 "title": task_title,
                 "assigned_to": assigned_to,
                 "priority": priority,
-                "deadline": deadline,
+                "deadline": deadline, # Format: YYYY-MM-DD
                 "status": "Pending",
                 "created_at": datetime.now().strftime("%Y-%m-%d %H:%M")
             }
             tasks.append(new_task)
             return redirect(url_for('dashboard'))
 
-    # Feature: Visual dashboards [cite: 27]
-    return render_template("dashboard.html", tasks=tasks)
+    # --- NOTIFICATION SYSTEM LOGIC ---
+    alerts = []
+    today = datetime.now().date()
+    
+    for task in tasks:
+        if task['status'] != "Completed" and task['deadline']:
+            try:
+                # Convert string deadline to date object
+                task_deadline = datetime.strptime(task['deadline'], '%Y-%m-%d').date()
+                
+                # Check for Overdue
+                if task_deadline < today:
+                    alerts.append({
+                        "type": "error",
+                        "msg": f"OVERDUE: '{task['title']}' was due on {task['deadline']}!"
+                    })
+                
+                # Check for Due Today
+                elif task_deadline == today:
+                    alerts.append({
+                        "type": "urgent",
+                        "msg": f"URGENT: '{task['title']}' is due TODAY!"
+                    })
+                
+                # Check for Due Soon (e.g., within 2 days)
+                elif task_deadline <= today + timedelta(days=2):
+                    days_left = (task_deadline - today).days
+                    alerts.append({
+                        "type": "warning",
+                        "msg": f"REMINDER: '{task['title']}' is due in {days_left} days."
+                    })
+            except ValueError:
+                pass # Handle potential date format errors gracefully
+
+    return render_template("dashboard.html", tasks=tasks, alerts=alerts)
 
 
 @app.route('/talk', methods=["GET", "POST"])
 def talk():
-    # Feature: Communicate within members / Real-time chat [cite: 18, 21]
     if request.method == "POST":
         user = request.form.get("username")
         content = request.form.get("message")
@@ -53,7 +82,6 @@ def talk():
 
     return render_template('talk.html', messages=messages)
 
-# Feature: Update task status (Simulated logic for "Done")
 @app.route('/complete/<int:task_id>')
 def complete_task(task_id):
     for task in tasks:
