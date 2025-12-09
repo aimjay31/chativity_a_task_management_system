@@ -3,10 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Talk</title>
+    <title>Chativity - Talk</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .nav { margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #333; }
+        .nav a.active { font-weight: bold; color: #007bff; }
+
+        .chat-box { border: 1px solid #ddd; height: 400px; overflow-y: scroll; padding: 15px; margin-bottom: 20px; background: #fafafa; }
+        .message { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .meta { font-size: 0.8em; color: #666; }
+        .user { font-weight: bold; color: #007bff; }
+        
+        .input-area { display: flex; gap: 10px; }
+        input[type="text"] { flex-grow: 1; padding: 10px; }
+        button { padding: 10px 20px; }
+    </style>
 </head>
 <body>
-    <p>Talk</p>
-    <p>This is the link to <a href="/" class="{% if request.path == '/' %}active{% endif %}">Dashboard</a></p>
+    <h1>Chativity Team Chat</h1>
+    
+    <div class="nav">
+        <a href="/">Task Dashboard</a>
+        <a href="/talk" class="active">Team Chat</a>
+    </div>
+
+    <div class="chat-box">
+        {% for msg in messages %}
+        <div class="message">
+            <div class="meta"><span class="user">{{ msg.user }}</span> at {{ msg.timestamp }}</div>
+            <div>{{ msg.content }}</div>
+        </div>
+        {% else %}
+        <p style="color: gray; text-align: center;">No messages yet. Start the conversation!</p>
+        {% endfor %}
+    </div>
+
+    <form class="input-area" method="POST" action="/talk">
+        <input type="text" name="username" placeholder="Your Name" style="flex: 0 0 150px;" required>
+        <input type="text" name="message" placeholder="Type a message to the team..." required>
+        <button type="submit">Send</button>
+    </form>
 </body>
 </html>
